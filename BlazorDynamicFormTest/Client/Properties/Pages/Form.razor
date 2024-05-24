@@ -1,0 +1,69 @@
+﻿@page "/"
+@using System.Dynamic
+@using BlazorDynamicForm
+@using BlazorDynamicForm.Entities
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Converters
+@inject HttpClient Http
+
+@if (definition != null)
+{
+    <DynamicForm FormDefinition="@definition" OnValidSubmit="@OnValidResult">
+        <FieldTemplate Context="template">
+            @template.DynamicComponent
+        </FieldTemplate>
+        <SubmitTemplate>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </SubmitTemplate>
+    </DynamicForm>
+}
+
+
+<p>@Result</p>
+@code {
+
+
+    void OnValidResult(ExpandoObject? data)
+    {
+        JsonData = JsonConvert.SerializeObject(data, new JsonSerializerSettings()
+            {
+               // DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate,
+               // TypeNameHandling = TypeNameHandling.Auto,
+                Converters = new[] { new ExpandoObjectConverter() }
+            });
+        Console.WriteLine(JsonData);
+    }
+    private string Result { get; set; }
+
+    FormMap? definition;
+    // ExpandoObject? data;
+    public static string? JsonData = null;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        var definitionRaw = await Http.GetStringAsync("Definition");
+        if (!string.IsNullOrWhiteSpace(JsonData))
+        {
+            // data = JsonConvert.DeserializeObject<ExpandoObject?>(JsonData, new JsonSerializerSettings()
+            //     {
+            //         DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate,
+            //         TypeNameHandling = TypeNameHandling.Auto
+            //     });
+        }
+        Console.WriteLine(definitionRaw);
+        definition = JsonConvert.DeserializeObject<FormMap>(definitionRaw, new JsonSerializerSettings()
+            {
+                DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate,
+                TypeNameHandling = TypeNameHandling.Auto
+            });
+        StateHasChanged();
+
+
+
+    }
+
+}
